@@ -36,8 +36,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
             from: 'rithankumar007@gmail.com', 
             to: row.Email, 
             subject: `Hello ${row.Name}`, 
-            text: `Hi ${row.Name}, this is an automated email.`,
-            ContentVisibilityAutoStateChangeEvent
+            text: `Hi ${row.Name}, ${row.Text}`,
         });
     });
 

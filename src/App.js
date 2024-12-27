@@ -1,5 +1,5 @@
 import Frontend from "./frontend.js";
-
+import "./index.css"
 
 
 function App() {
