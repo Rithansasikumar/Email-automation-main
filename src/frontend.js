@@ -139,6 +139,7 @@ const Frontend = () => {
           <Button
             variant="contained"
             component="label"
+            hidden
             className="bg-green-600 hover:bg-green-700 text-white flex items-center space-x-2"
             startIcon={<CloudUpload />}
           >
