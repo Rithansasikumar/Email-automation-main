@@ -76,6 +76,14 @@ const Frontend = () => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("data", JSON.stringify(selectedData));
+
+    selectedData.forEach((row, index) => {
+      const attachment = row.attachment;
+      if (attachment) {
+        formData.append(`attachment-${index}`, attachment);
+      }
+    });
+
     if (attachment) {
       formData.append("attachment", attachment);
     }
@@ -93,12 +101,17 @@ const Frontend = () => {
   };
 
   const filteredData = data.filter((row) =>
-    Object.values(row).some(
-      (val) =>
-        val &&
-        val.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    Object.values(row).some((val) =>
+      val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+  
+  const handleRowAttachmentUpload = (index, e) => {
+    const newData = [...data];
+    newData[index].attachment = e.target.files[0] || null; 
+    setData(newData);
+  };
+  
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white p-6">
@@ -182,11 +195,18 @@ const Frontend = () => {
                         color="primary"
                       />
                     </TableCell>
-                    {Object.values(row).map((val, i) => (
+                    {Object.entries(row).map(([key, val], i) => (
                       <TableCell key={i} className="text-white">
-                        {val}
+                        {key === "attachment" && val instanceof File ? val.name : val} {/* Display file name */}
                       </TableCell>
                     ))}
+                    <TableCell>
+                      <input
+                        type="file"
+                        onChange={(e) => handleRowAttachmentUpload(index, e)}
+                        className="border border-gray-300 rounded-md p-2"
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

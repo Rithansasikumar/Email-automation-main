@@ -8,7 +8,7 @@
 // // const handlebars = require('handlebars');
 // // const fs = require('fs');
 // // const path = require('path');
-// // const emailData = require('./email_data.js'); 
+// // const emailData = require('./email_data.js');
 // // const generateHtmlContent = require('./email.js');
 
 // const app = express();
@@ -20,15 +20,18 @@
 // const transporter = nodemailer.createTransport({
 //     service: 'gmail',
 //     auth: {
-//         user: process.env.EMAIL_USER, 
-//         pass: process.env.EMAIL_PASS, 
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS,
 //     },
 // });
 
-// app.post('/upload', upload.single('file'), (req, res) => {
-//     const file = req.file;
+
+// app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment' }]), (req, res) => {
+//     const file = req.files?.file?.[0]; // Excel file
+//     const attachment = req.files?.attachment?.[0]; // Optional attachment
+
 //     if (!file) {
-//         return res.status(400).send('No file uploaded.');
+//         return res.status(400).send('No Excel file uploaded.');
 //     }
 
 //     const workbook = xlsx.readFile(file.path);
@@ -51,16 +54,11 @@
 //             text: `Hi ${row.Name}, ${row.Text}`,
 //         });
 //     });
-
 //     Promise.all(promises)
 //         .then(() => res.status(200).send('Emails sent successfully!'))
 //         .catch((error) => res.status(500).send('Failed to send emails. ' + error.message));
 // });
 
-// const PORT = 5000;
-// app.listen(PORT, () => {
-//     console.log(`Server is running on port ${PORT}`);
-// });
 
 require('dotenv').config();
 const express = require('express');
@@ -85,10 +83,8 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment' }]), (req, res) => {
-    const file = req.files?.file?.[0]; // Excel file
-    const attachment = req.files?.attachment?.[0]; // Optional attachment
-
+app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment-0' }, { name: 'attachment-1' }]), (req, res) => {
+    const file = req.files?.file?.[0]; 
     if (!file) {
         return res.status(400).send('No Excel file uploaded.');
     }
@@ -98,25 +94,43 @@ app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment' }]), (
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
 
-    const promises = data.map((row) => {
+    const promises = data.map((row, index) => {
+        const attachments = [];
+        const rowAttachment = req.files[`attachment-${index}`]?.[0];
+        if (rowAttachment) {
+            attachments.push({
+                filename: rowAttachment.originalname,
+                path: rowAttachment.path,
+            });
+        }
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: row.Email,
             subject: `Hello ${row.Name}`,
             text: `Hi ${row.Name}, ${row.Text}`,
-            // Attach file if attachment is provided
-            attachments: attachment
-                ? [{ filename: attachment.originalname, path: attachment.path }]
-                : [],
+            attachments, 
         };
 
         return transporter.sendMail(mailOptions);
     });
 
+    const fs = require('fs');
+
     Promise.all(promises)
-        .then(() => res.status(200).send('Emails sent successfully!'))
-        .catch((error) => res.status(500).send('Failed to send emails. ' + error.message));
+      .then(() => {
+        // Clean up uploaded files
+        Object.values(req.files).flat().forEach((file) => {
+          fs.unlinkSync(file.path);
+        });
+        res.status(200).send('Emails sent successfully!');
+      })
+      .catch((error) => {
+        res.status(500).send('Failed to send emails. ' + error.message);
+      });
+    
 });
+
 
 
 const PORT = 5000;
