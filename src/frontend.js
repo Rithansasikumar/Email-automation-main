@@ -76,6 +76,8 @@ const Frontend = () => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("data", JSON.stringify(selectedData));
+    console.log(selectedData);
+    return selectedData;
 
     // selectedData.forEach((row, index) => {
     //   const attachment = row.attachment;

@@ -41,7 +41,7 @@ app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment' }]), a
 
     const emailHtmlFilePath = path.join(__dirname, 'email.html');
     const emailHtmlContent = fs.readFileSync(emailHtmlFilePath, 'utf8');
-
+    
 
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
