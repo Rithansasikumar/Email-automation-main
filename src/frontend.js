@@ -77,12 +77,12 @@ const Frontend = () => {
     formData.append("file", file);
     formData.append("data", JSON.stringify(selectedData));
 
-    selectedData.forEach((row, index) => {
-      const attachment = row.attachment;
-      if (attachment) {
-        formData.append(`attachment-${index}`, attachment);
-      }
-    });
+    // selectedData.forEach((row, index) => {
+    //   const attachment = row.attachment;
+    //   if (attachment) {
+    //     formData.append(`attachment-${index}`, attachment);
+    //   }
+    // });
 
     if (attachment) {
       formData.append("attachment", attachment);
@@ -201,13 +201,13 @@ const Frontend = () => {
                         {key === "attachment" && val instanceof File ? val.name : val} {/* Display file name */}
                       </TableCell>
                     ))}
-                    <TableCell>
+                    {/* <TableCell>
                       <input
                         type="file"
                         onChange={(e) => handleRowAttachmentUpload(index, e)}
                         className="border border-gray-300 rounded-md p-2"
                       />
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>
