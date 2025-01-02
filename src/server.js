@@ -43,13 +43,24 @@ app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment' }]), a
     const emailHtmlContent = fs.readFileSync(emailHtmlFilePath, 'utf8');
     
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(emailHtmlContent);
-    const pdfBuffer = await page.pdf({ format: 'A4' });
-    await browser.close();
 
-    const promises = data.map((row) => {
+    const browser = await puppeteer.launch();
+   
+
+    const promises = data.map(async (row) => {
+        let personalizedHtml = emailHtmlContent;
+
+        
+        Object.keys(row).forEach((key) => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            personalizedHtml = personalizedHtml.replace(regex, row[key]);
+        });
+
+        const page = await browser.newPage();
+        await page.setContent(personalizedHtml);
+        const pdfBuffer = await page.pdf({ format: 'A4' });
+        await page.close();
+
         return transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: row.Email,
@@ -67,9 +78,18 @@ app.post('/upload', upload.fields([{ name: 'file' }, { name: 'attachment' }]), a
         });
     });
 
-    Promise.all(promises)
-        .then(() => res.status(200).send('Emails sent successfully!'))
-        .catch((error) => res.status(500).send('Failed to send emails. ' + error.message));
+    // Promise.all(promises)
+    //     .then(() => res.status(200).send('Emails sent successfully!'))
+    //     .catch((error) => res.status(500).send('Failed to send emails. ' + error.message));
+
+    try {
+        await Promise.all(promises);
+        await browser.close();
+        res.status(200).send('Emails sent successfully!');
+    } catch (error) {
+        await browser.close();
+        res.status(500).send('Failed to send emails. ' + error.message);
+    }
 });
 
 
